@@ -21,7 +21,7 @@ do_opcode:
 	;TODO: see if the add instruction could be skipped by doing lwz r3, r3(r30)
 	
 	mtctr r3
-	bctrl
+	bctr
 	
 	blr ;the last instruction may have messed that up
 opcode_addr_table:
