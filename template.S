@@ -16,22 +16,43 @@ do_opcode:
 	mulli r3, r3, 4 ;opcode = opcode * sizeof(pointer)
 	lis r30, opcode_addr_table@ha
 	ori r30, r30, opcode_addr_table@l ;r30 = pointer to opcode_addr_table
+	;This ori could be removed by playing with the lwz offset below
 	add r3, r30, r3 ;pointer to opcode_#_addr = r30 + opcode
 	lwz r3, 0(r3) ;load opcode_#_addr into r3
 	;TODO: see if the add instruction could be skipped by doing lwz r3, r3(r30)
 	
-	mtctr r3
-	bctr
+	;alternativley:
+	mulli r3, r3, 4
+	addi r3, r3, opcode_addr_table@h ;check this syntax, is there an "addis"?
+	lwz r3, opcode_addr_table@l(r3)
+	;much smaller
 	
+	mflr r0 ;r0 = lr
+	
+	mtctr r3
+	bctrl
+	
+	mtlr r0
 	blr ;the last instruction may have messed that up
+	;Is there any reason to move back to this routine or should we just have blr on the opcode do the instruction?
 opcode_addr_table:
 .dw opcode_0_addr opcode_0
 .dw opcode_1_addr opcode_1
 
 ;Stub opcodes for testing, I guess?
 
+;r0 = lr (keep)
+;r1 = sp (keep)
+;r2 = emulated pc?
+;r3 = opcode
+;r4 = emulated registers?
+
+;r30 = math
+
 opcode_0:
-	addi r3, r3, 0
+	lwz r3, 1(r2) ;load data (addressing modes, I know, I know.)
+	add r4, r4, r3 ;do instruction
+	addi r2, r2, 2 ;increment emulated program counter
 	blr
 opcode_1:
 	subi r3, r3, 0
