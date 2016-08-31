@@ -8,6 +8,8 @@
 
 #THIS CODE IS CURRENTLY UNTESTED
 
+#remember that hashes are comments, GitHub doesn't highlight them properly
+
 #run_test(void* valid_memory_location)
 .globl run_test
 run_test:
@@ -63,7 +65,7 @@ opcode_1_addr:
 #r30 = math
 
 opcode_0: #fake opcode, adds data to r4
-	lwz r3, 1(r2) #load data (addressing modes, I know, I know.)
+	lbz r3, 1(r2) #load data (addressing modes, I know, I know.)
 	add r4, r4, r3 #do instruction
 	addi r2, r2, 2 #increment emulated program counter
 	blr

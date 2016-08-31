@@ -28,7 +28,9 @@ int Menu_Main(void)
     //! do OS (for acquire) and sockets first so we got logging
     InitOSFunctionPointers();
     InitSocketFunctionPointers();
-InstallExceptionHandler();
+	
+	InstallExceptionHandler();
+	
     log_init("192.168.178.3");
     log_print("Starting launcher\n");
 
