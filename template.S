@@ -11,17 +11,19 @@
 #run_test(void* valid_memory_location)
 .globl run_test
 run_test:
-	mr r2, r3 #set PC
+	mr r2, r3 #set emulated PC to valid_memory_location
 	li r3, 0
-	stb r3, 0(r2) #write opcode 0
-	li r4, 1
-	li r5, 0
-	stb r4, 1(r2) #write data 1
+	stb r3, 0(r2) #write opcode "0" to emulated PC
+	li r4, 1 #emulated register 1 = 1
+	stb r4, 1(r2) #write data "1" (emulated register 1) to valid_memory_location+1
+	
 	mflr r0
 	bl do_opcode #do_opcode(0)
+	
 	mr r3, r4 #return emulated register 1
 	mtlr r0 #break
 	blr
+
 #A temporary thing to test the jump table.
 #do_opcode(int opcode)
 #
