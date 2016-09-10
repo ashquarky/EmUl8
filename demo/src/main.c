@@ -91,15 +91,30 @@ int Menu_Main(void)
     OSScreenFlipBuffersEx(0);
     OSScreenFlipBuffersEx(1);
 	
-	void* mem = MEM1_alloc(0x10, 0x10);
+	EmUl8Context ctx;
+	memset(&ctx, 0, sizeof(ctx));
 	
-	int ret = run_test(mem);
+	unsigned char* emumem = MEM1_alloc(0x100, 0x10);
+	
+	ctx.memory_start = (unsigned int)emumem;
+	ctx.r1 = 1;
+	
+	emumem[0] = 0x0;
+	emumem[1] = 0x2;
+	emumem[2] = 0x1;
+	emumem[3] = 0x1;
+	emumem[4] = 0x1;
+	emumem[5] = 0x1;
+	
+	int ret = run_cpu(&ctx, 1); //4 CPU cycles
 	
 	char buf[128];
-	__os_snprintf(buf, 128, "ASM came back with %X, expecting 2", ret);
+	__os_snprintf(buf, 128, "done! ret:%X rpc:%X pc:%X r1:%X cyc:%X ctx:%X mem:%X", ret, ctx.real_pc, ctx.pc, ctx.r1, ctx.cycles, &ctx, emumem);
 	OSScreenPutFontEx(1, 0, 2, buf);
+	OSScreenPutFontEx(0, 0, 2, buf);
 	DCFlushRange(screenBuffer, screen_buf0_size + screen_buf1_size);
 	OSScreenFlipBuffersEx(1);
+	OSScreenFlipBuffersEx(0); //can you tell I added TV support late?
 	
     int vpadError = -1;
     VPADData vpad;
