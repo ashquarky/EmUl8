@@ -22,92 +22,92 @@
 /* Entry point */
 int Menu_Main(void)
 {
-    //!*******************************************************************
-    //!                   Initialize function pointers                   *
-    //!*******************************************************************
-    //! do OS (for acquire) and sockets first so we got logging
-    InitOSFunctionPointers();
-    InitSocketFunctionPointers();
-	
+	//!*******************************************************************
+	//!                   Initialize function pointers                   *
+	//!*******************************************************************
+	//! do OS (for acquire) and sockets first so we got logging
+	InitOSFunctionPointers();
+	InitSocketFunctionPointers();
+
 	InstallExceptionHandler();
-	
-    log_init("192.168.178.3");
-    log_print("Starting launcher\n");
 
-    InitFSFunctionPointers();
-    InitVPadFunctionPointers();
+	log_init("192.168.178.3");
+	log_print("Starting launcher\n");
 
-    log_print("Function exports loaded\n");
+	InitFSFunctionPointers();
+	InitVPadFunctionPointers();
 
-    //!*******************************************************************
-    //!                    Initialize heap memory                        *
-    //!*******************************************************************
-    log_print("Initialize memory management\n");
-    //! We don't need bucket and MEM1 memory so no need to initialize
-    memoryInitialize();
+	log_print("Function exports loaded\n");
 
-    //!*******************************************************************
-    //!                        Initialize FS                             *
-    //!*******************************************************************
-    log_printf("Mount SD partition\n");
-    mount_sd_fat("sd");
+	//!*******************************************************************
+	//!                    Initialize heap memory                        *
+	//!*******************************************************************
+	log_print("Initialize memory management\n");
+	//! We don't need bucket and MEM1 memory so no need to initialize
+	memoryInitialize();
 
-    VPADInit();
+	//!*******************************************************************
+	//!                        Initialize FS                             *
+	//!*******************************************************************
+	log_printf("Mount SD partition\n");
+	mount_sd_fat("sd");
 
-    // Prepare screen
-    int screen_buf0_size = 0;
-    int screen_buf1_size = 0;
+	VPADInit();
 
-    // Init screen and screen buffers
-    OSScreenInit();
-    screen_buf0_size = OSScreenGetBufferSizeEx(0);
-    screen_buf1_size = OSScreenGetBufferSizeEx(1);
+	// Prepare screen
+	int screen_buf0_size = 0;
+	int screen_buf1_size = 0;
 
-    unsigned char *screenBuffer = MEM1_alloc(screen_buf0_size + screen_buf1_size, 0x100);
+	// Init screen and screen buffers
+	OSScreenInit();
+	screen_buf0_size = OSScreenGetBufferSizeEx(0);
+	screen_buf1_size = OSScreenGetBufferSizeEx(1);
 
-    OSScreenSetBufferEx(0, screenBuffer);
-    OSScreenSetBufferEx(1, (screenBuffer + screen_buf0_size));
+	unsigned char *screenBuffer = MEM1_alloc(screen_buf0_size + screen_buf1_size, 0x100);
 
-    OSScreenEnableEx(0, 1);
-    OSScreenEnableEx(1, 1);
+	OSScreenSetBufferEx(0, screenBuffer);
+	OSScreenSetBufferEx(1, (screenBuffer + screen_buf0_size));
 
-    // Clear screens
-    OSScreenClearBufferEx(0, 0);
-    OSScreenClearBufferEx(1, 0);
+	OSScreenEnableEx(0, 1);
+	OSScreenEnableEx(1, 1);
 
-    // print to TV
-    OSScreenPutFontEx(0, 0, 0, "Hello world on TV!!!");
-    OSScreenPutFontEx(0, 0, 1, "Press HOME-Button to exit.");
+	// Clear screens
+	OSScreenClearBufferEx(0, 0);
+	OSScreenClearBufferEx(1, 0);
 
-    // print to DRC
-    OSScreenPutFontEx(1, 0, 0, "Hello world on DRC!!!");
-    OSScreenPutFontEx(1, 0, 1, "Press HOME-Button to exit.");
+	// print to TV
+	OSScreenPutFontEx(0, 0, 0, "Hello world on TV!!!");
+	OSScreenPutFontEx(0, 0, 1, "Press HOME-Button to exit.");
 
-    // Flush the cache
-    DCFlushRange(screenBuffer, screen_buf0_size);
-    DCFlushRange((screenBuffer + screen_buf0_size), screen_buf1_size);
+	// print to DRC
+	OSScreenPutFontEx(1, 0, 0, "Hello world on DRC!!!");
+	OSScreenPutFontEx(1, 0, 1, "Press HOME-Button to exit.");
 
-    // Flip buffers
-    OSScreenFlipBuffersEx(0);
-    OSScreenFlipBuffersEx(1);
-	
+	// Flush the cache
+	DCFlushRange(screenBuffer, screen_buf0_size);
+	DCFlushRange((screenBuffer + screen_buf0_size), screen_buf1_size);
+
+	// Flip buffers
+	OSScreenFlipBuffersEx(0);
+	OSScreenFlipBuffersEx(1);
+
 	EmUl8Context ctx;
 	memset(&ctx, 0, sizeof(ctx));
-	
+
 	unsigned char* emumem = MEM1_alloc(0x100, 0x10);
-	
+
 	ctx.memory_start = (unsigned int)emumem;
 	ctx.r1 = 1;
-	
+
 	emumem[0] = 0x0;
 	emumem[1] = 0x2;
 	emumem[2] = 0x1;
 	emumem[3] = 0x1;
 	emumem[4] = 0x1;
 	emumem[5] = 0x1;
-	
+
 	int ret = run_cpu(&ctx, 1); //4 CPU cycles
-	
+
 	char buf[128];
 	__os_snprintf(buf, 128, "done! ret:%X rpc:%X pc:%X r1:%X cyc:%X ctx:%X mem:%X", ret, ctx.real_pc, ctx.pc, ctx.r1, ctx.cycles, &ctx, emumem);
 	OSScreenPutFontEx(1, 0, 2, buf);
@@ -115,33 +115,32 @@ int Menu_Main(void)
 	DCFlushRange(screenBuffer, screen_buf0_size + screen_buf1_size);
 	OSScreenFlipBuffersEx(1);
 	OSScreenFlipBuffersEx(0); //can you tell I added TV support late?
-	
-    int vpadError = -1;
-    VPADData vpad;
 
-    while(1)
-    {
-        VPADRead(0, &vpad, 1, &vpadError);
+	int vpadError = -1;
+	VPADData vpad;
 
-        if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_HOME))
-            break;
+	while(1)
+	{
+		VPADRead(0, &vpad, 1, &vpadError);
 
+		if(vpadError == 0 && ((vpad.btns_d | vpad.btns_h) & VPAD_BUTTON_HOME))
+		break;
+		
 		usleep(50000);
-    }
+	}
 
 	MEM1_free(screenBuffer);
 	screenBuffer = NULL;
 
-    //!*******************************************************************
-    //!                    Enter main application                        *
-    //!*******************************************************************
+	//!*******************************************************************
+	//!                    Enter main application                        *
+	//!*******************************************************************
 
-    log_printf("Unmount SD\n");
-    unmount_sd_fat("sd");
-    log_printf("Release memory\n");
-    memoryRelease();
-    log_deinit();
+	log_printf("Unmount SD\n");
+	unmount_sd_fat("sd");
+	log_printf("Release memory\n");
+	memoryRelease();
+	log_deinit();
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
-
