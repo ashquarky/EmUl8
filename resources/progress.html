@@ -1,0 +1,120 @@
+<html>
+<head>
+	<!--keeping track of globals -->
+	<script type="text/javascript">
+		var curr_progress = 2;
+		var cpu_tasks = 256;
+		var apu_tasks = 55;
+		var ppu_tasks = 68;
+		var gui_tasks = 100;
+
+		var total_progress = cpu_tasks + ppu_tasks + apu_tasks + gui_tasks;
+		var percent = curr_progress / total_progress * 100;
+	</script>
+
+	<title>NES Progress</title>
+
+	<link href="https://fonts.googleapis.com/css?family=Share+Tech+Mono" rel="stylesheet">
+
+	<!-- inline CSS isn't usually my thing, but no guarantees with this hosting setup -->
+	<style>
+		html {
+			background-color: #1E1B20;
+			padding: 10px;
+		}
+		body {
+			font-family: 'Share Tech Mono', monospace;
+			color: white;
+			font-size: 18pt;
+			padding: none;
+		}
+		.progress {
+			width: 100%;
+			height: 30px;
+			background-color: #4E3A78;
+			font-size: 0;
+			position: relative;
+			top: 0;
+			left: 0;
+		}
+		.progress > div {
+			display: inline-block;
+			position: absolute;
+			top: 0;
+			height: 100%;
+			font-size: 18pt;
+			text-align: center;
+			border-left: 1px solid white;
+		}
+		.first-progress {
+			border-left: none !important;
+		}
+		.progress-inner {
+			background-color: #9227BD;
+			left: 0;
+			border-left: none !important;
+		}
+		.progress-text {
+			text-align: center;
+			margin-top: 5px;
+		}
+		.breakdown {
+			font-size: 14pt;
+		}
+	</style>
+	<script type="text/javascript">
+		var tally = 0;
+		document.write("<style>");
+		document.write(".progress-inner{width:" + percent + "%;}");
+		document.write(".cpu-progress{width:" + cpu_tasks / total_progress * 100 +"%;left:0;}");
+		tally = tally + cpu_tasks / total_progress * 100;
+		document.write(".apu-progress{width:" + apu_tasks / total_progress * 100 +"%;left:" + tally + "%;}");
+		tally = tally + apu_tasks / total_progress * 100;
+		document.write(".ppu-progress{width:" + ppu_tasks / total_progress * 100 +"%;left:" + tally + "%;}");
+		tally = tally + ppu_tasks / total_progress * 100;
+		document.write(".gui-progress{width:" + gui_tasks / total_progress * 100 +"%;left:" + tally + "%;}");
+		document.write("</style>");
+	</script>
+</head>
+<body>
+	<div class="progress-container">
+		<div class="progress">
+			<div class="progress-inner"></div>
+			<div class="cpu-progress first-progress">CPU</div>
+			<div class="apu-progress">APU</div>
+			<div class="ppu-progress">PPU</div>
+			<div class="gui-progress">GUI</div>
+		</div>
+		<div class="progress-text">
+			<script type="text/javascript">
+				document.write("Current Progress - " + curr_progress + " tasks complete out of " + total_progress + " <span title='" + percent + "%'>" + "(" + Math.round(percent) + "%)</span>");
+			</script>
+		</div>
+	</div>
+	<div class="breakdown">
+		<h1>Task Breakdown</h1>
+		I may "stick" at the end of each section, this will usually be bugs I missed or integrating the modules together.<br />
+		These are pretty wild guesses.
+		<ul>
+			<li><b>256 tasks for the CPU</b> - One for each instruction.<br />
+				Each instruction needs to be written, added to the jump table, have its P register writes set correctly, and double-checked for the silly mistakes I always seem to make.<br />
+				<a href="http://nesdev.com/6502_cpu.txt">Quick instruction table</a>
+			</li>
+			<li><b>55 tasks for the APU</b><br />
+				This includes setting up the Wii U's audio engine, writing generators for all the NES's sound types, interpreting the NES's bitmasks
+				and implementing each parameter and effect in those bitmasks. Based on <a href="http://wiki.nesdev.com/w/index.php/APU">the documentation</a>
+				for this, I get around 45 tasks, although I feel that's an underestimate. 10 extra tasks for pitch and bugfixes.
+			</li>
+			<li><b>68 tasks for the PPU</b><br />
+				Each of the PPU's registers needs to be accessible from the CPU and also needs to function (~20 tasks).
+				Not only that, but each register actually needs to do what it is intended to do and affect the PPU correctly (29 tasks).
+				All this needs to come together in an RGB framebuffer that we can pass into the GUI. I basically need to write a renderer. (20 tasks) <br />
+				Extra 20 tasks since I only skimmed <a href="http://wiki.nesdev.com/w/index.php/PPU_registers">this page</a> and didn't really look at how the PPU actually works. I know this will be harder than at first glance.
+			</li>
+			<li><b>A Wild Guess (100?) for the GUI</b><br />
+				Other than the GUI itself (simple OSScreen for now), this also covers ROM loading, inputs, and anything else I forgot.
+				It's a pretty wild guess. This section is deceptivley large.
+		</ul>
+	</div>
+</body>
+</html>
